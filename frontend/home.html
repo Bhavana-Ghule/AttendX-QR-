@@ -1,0 +1,1326 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AttendX - QR Attendance Platform</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Space Grotesk', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .gradient-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); }
+    .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .glow { box-shadow: 0 0 30px rgba(99, 102, 241, 0.3); }
+    .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(99, 102, 241, 0.2); }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); } 50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); } }
+    .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
+    .tab-active { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; }
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 3px; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div id="app" class="min-h-full w-full"><!-- Header -->
+   <header class="glass sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center glow">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="platform-title" class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">AttendX</h1>
+        <p id="welcome-message" class="text-xs text-slate-400">Smart Attendance Management</p>
+       </div>
+      </div>
+      <div class="flex items-center gap-2"><span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"> ● Online </span>
+      </div>
+     </div>
+    </div>
+   </header><!-- Navigation Tabs -->
+   <nav class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+    <div class="glass rounded-2xl p-1.5 flex gap-1"><button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-active flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+      </svg><span class="hidden sm:inline">Dashboard</span> </button> <button onclick="switchTab('generate')" id="tab-generate" class="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5 flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg><span class="hidden sm:inline">Generate QR</span> </button> <button onclick="switchTab('attendance')" id="tab-attendance" class="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5 flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg><span class="hidden sm:inline">Attendance</span> </button> <button onclick="switchTab('notes')" id="tab-notes" class="flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5 flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg><span class="hidden sm:inline">Notes</span> </button>
+    </div>
+   </nav>
+   <!-- Main Content -->
+   <main class="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+    <!-- Dashboard Tab -->
+    <section id="section-dashboard" class="animate-slide-up">
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="glass rounded-2xl p-6 card-hover transition-all duration-300">
+       <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+         <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+         </svg>
+        </div><span class="text-2xl font-bold text-indigo-400" id="stat-lectures">0</span>
+       </div>
+       <h3 class="text-slate-300 font-medium">Total Lectures</h3>
+      </div>
+      <div class="glass rounded-2xl p-6 card-hover transition-all duration-300">
+       <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+         <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+         </svg>
+        </div><span class="text-2xl font-bold text-emerald-400" id="stat-students">0</span>
+       </div>
+       <h3 class="text-slate-300 font-medium">Students Attended</h3>
+      </div>
+      <div class="glass rounded-2xl p-6 card-hover transition-all duration-300">
+       <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+         <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+         </svg>
+        </div><span class="text-2xl font-bold text-purple-400" id="stat-notes">0</span>
+       </div>
+       <h3 class="text-slate-300 font-medium">Saved Notes</h3>
+      </div>
+     </div>
+     <div class="glass rounded-2xl p-6">
+      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+       <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg> Recent Activity</h2>
+      <div id="recent-activity" class="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
+       <p class="text-slate-500 text-center py-8">No recent activity yet. Create a lecture to get started!</p>
+      </div>
+     </div>
+    </section>
+    <!-- Generate QR Tab -->
+    <section id="section-generate" class="hidden animate-slide-up">
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="glass rounded-2xl p-6">
+       <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg> Create New Lecture Session</h2>
+       <form id="lecture-form" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-300 mb-2">Lecture Name</label> <input type="text" id="lecture-name" required placeholder="e.g., Introduction to Programming" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+         <div><label class="block text-sm font-medium text-slate-300 mb-2">Date</label> <input type="date" id="lecture-date" required class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+         </div>
+         <div><label class="block text-sm font-medium text-slate-300 mb-2">Time</label> <input type="time" id="lecture-time" required class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+         </div>
+        </div><button type="submit" id="generate-btn" class="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+         </svg> Generate QR Code </button>
+       </form>
+      </div>
+      <div class="glass rounded-2xl p-6">
+       <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+        </svg> Generated QR Code</h2>
+       <div id="qr-display" class="flex flex-col items-center justify-center min-h-64">
+        <div class="text-center text-slate-500">
+         <svg class="w-16 h-16 mx-auto mb-4 opacity-30" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+         </svg>
+         <p>Fill the form and click generate to create a QR code</p>
+        </div>
+       </div>
+      </div>
+     </div><!-- Active Lectures List -->
+     <div class="glass rounded-2xl p-6 mt-6">
+      <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+       <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+       </svg> Your Lectures</h2>
+      <div id="lectures-list" class="space-y-3 max-h-80 overflow-y-auto scrollbar-thin">
+       <p class="text-slate-500 text-center py-8">No lectures created yet.</p>
+      </div>
+     </div>
+    </section><!-- Attendance Tab (Student Check-in) -->
+    <section id="section-attendance" class="hidden animate-slide-up">
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><!-- Student Check-in Form -->
+      <div class="glass rounded-2xl p-6">
+       <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg> Student Attendance Check-in</h2>
+       <form id="attendance-form" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-300 mb-2">Select Lecture</label> <select id="select-lecture" required class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"> <option value="">-- Select a Lecture --</option> </select>
+        </div>
+        <div><label class="block text-sm font-medium text-slate-300 mb-2">Student Name</label> <input type="text" id="student-name" required placeholder="Enter your full name" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+        </div>
+        <div><label class="block text-sm font-medium text-slate-300 mb-2">Student ID / Roll Number</label> <input type="text" id="student-id" required placeholder="Enter your student ID" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+        </div><button type="submit" id="checkin-btn" class="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+         </svg> Mark Attendance </button>
+       </form>
+       <div id="checkin-status" class="mt-4 hidden"></div>
+      </div><!-- Attendance Records -->
+      <div class="glass rounded-2xl p-6">
+       <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg> Attendance Records</h2>
+       <div class="mb-4"><select id="filter-lecture" class="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500 transition-all"> <option value="">All Lectures</option> </select>
+       </div>
+       <div id="attendance-list" class="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">
+        <p class="text-slate-500 text-center py-8">No attendance records yet.</p>
+       </div>
+      </div>
+     </div>
+    </section><!-- Notes Tab -->
+    <section id="section-notes" class="hidden animate-slide-up">
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><!-- Add Note Form -->
+      <div class="glass rounded-2xl p-6">
+       <h2 class="text-lg font-semibold mb-6 flex items-center gap-2">
+        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg> Add Lecture Notes</h2>
+       <form id="notes-form" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-300 mb-2">Link to Lecture (Optional)</label> <select id="note-lecture" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"> <option value="">-- General Note --</option> </select>
+        </div>
+        <div><label class="block text-sm font-medium text-slate-300 mb-2">Note Title</label> <input type="text" id="note-title" required placeholder="e.g., Key Concepts - Week 1" class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+        </div>
+        <div><label class="block text-sm font-medium text-slate-300 mb-2">Note Content</label> <textarea id="note-content" required rows="6" placeholder="Write your lecture notes here..." class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-none"></textarea>
+        </div><button type="submit" id="save-note-btn" class="w-full py-4 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+         </svg> Save Note </button>
+       </form>
+      </div><!-- Saved Notes -->
+      <div class="glass rounded-2xl p-6">
+       <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg> Saved Notes</h2>
+       <div id="notes-list" class="space-y-3 max-h-[500px] overflow-y-auto scrollbar-thin">
+        <p class="text-slate-500 text-center py-8">No notes saved yet. Start adding notes to your lectures!</p>
+       </div>
+      </div>
+     </div>
+    </section>
+   </main><!-- Toast Notification -->
+   <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full opacity-0 transition-all duration-300 z-50">
+    <div class="glass rounded-xl px-6 py-4 flex items-center gap-3">
+     <div id="toast-icon"></div><span id="toast-message" class="font-medium"></span>
+    </div>
+   </div>
+  </div>
+<script>
+const API_BASE = "http://localhost:5000/api";
+
+let allData = [];
+let currentTab = "dashboard";
+let currentLectureId = null;
+
+
+// ===============================
+// API HELPER
+// ===============================
+
+async function apiRequest(endpoint, options = {}) {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {})
+        },
+        ...options
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || result.success === false) {
+        throw new Error(
+            result.message || `Request failed: ${response.status}`
+        );
+    }
+
+    return result;
+}
+
+
+// ===============================
+// GET DATA FROM BACKEND
+// ===============================
+
+async function loadAllData() {
+    try {
+        const [lecturesResult, attendanceResult, notesResult] =
+            await Promise.all([
+                apiRequest("/lectures"),
+                apiRequest("/attendance"),
+                apiRequest("/notes")
+            ]);
+
+        const lectures = Array.isArray(lecturesResult)
+            ? lecturesResult
+            : lecturesResult.data || [];
+
+        const attendance = Array.isArray(attendanceResult)
+            ? attendanceResult
+            : attendanceResult.data || [];
+
+        const notes = Array.isArray(notesResult)
+            ? notesResult
+            : notesResult.data || [];
+
+
+        // Convert backend data into the format
+        // already used by your frontend
+
+        allData = [
+            ...lectures.map(row => ({
+                ...row,
+                type: "lecture",
+                __backendId: row.lecture_id
+            })),
+
+            ...attendance.map(row => ({
+                ...row,
+                type: "attendance",
+                __backendId: String(row.id)
+            })),
+
+            ...notes.map(row => ({
+                ...row,
+                type: "note",
+                __backendId: String(row.id)
+            }))
+        ];
+
+
+        updateDashboard();
+        updateLecturesList();
+        updateAttendanceList();
+        updateNotesList();
+        updateLectureDropdowns();
+
+    } catch (error) {
+        console.error("Load data error:", error);
+        showToast(error.message || "Unable to load data", "error");
+    }
+}
+
+
+// ===============================
+// DASHBOARD
+// ===============================
+
+function updateDashboard() {
+
+    const lectures = allData.filter(
+        item => item.type === "lecture"
+    );
+
+    const attendance = allData.filter(
+        item => item.type === "attendance"
+    );
+
+    const notes = allData.filter(
+        item => item.type === "note"
+    );
+
+
+    document.getElementById("stat-lectures").textContent =
+        lectures.length;
+
+    const uniqueStudents = new Set(
+        attendance.map(item => item.student_id)
+    );
+
+    document.getElementById("stat-students").textContent =
+        uniqueStudents.size;
+
+    document.getElementById("stat-notes").textContent =
+        notes.length;
+
+
+    const recentActivity =
+        document.getElementById("recent-activity");
+
+    const recentData = [...allData]
+        .sort((a, b) => {
+            const dateA = new Date(
+                a.created_at || a.check_in_time || 0
+            );
+
+            const dateB = new Date(
+                b.created_at || b.check_in_time || 0
+            );
+
+            return dateB - dateA;
+        })
+        .slice(0, 5);
+
+
+    if (recentData.length === 0) {
+        recentActivity.innerHTML = `
+            <p class="text-gray-500 text-center py-6">
+                No recent activity
+            </p>
+        `;
+        return;
+    }
+
+
+    recentActivity.innerHTML = recentData.map(item => {
+
+        if (item.type === "lecture") {
+            return `
+                <div class="flex items-center justify-between p-3 border-b">
+                    <div>
+                        <p class="font-semibold">
+                            📚 ${item.lecture_name}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Lecture created
+                        </p>
+                    </div>
+                    <span class="text-sm text-gray-400">
+                        ${formatTime(item.created_at)}
+                    </span>
+                </div>
+            `;
+        }
+
+
+        if (item.type === "attendance") {
+            return `
+                <div class="flex items-center justify-between p-3 border-b">
+                    <div>
+                        <p class="font-semibold">
+                            👤 ${item.student_name}
+                        </p>
+                        <p class="text-sm text-gray-500">
+                            Attendance marked
+                        </p>
+                    </div>
+                    <span class="text-sm text-gray-400">
+                        ${formatTime(item.check_in_time)}
+                    </span>
+                </div>
+            `;
+        }
+
+
+        return `
+            <div class="flex items-center justify-between p-3 border-b">
+                <div>
+                    <p class="font-semibold">
+                        📝 ${item.note_title}
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        Note created
+                    </p>
+                </div>
+                <span class="text-sm text-gray-400">
+                    ${formatTime(item.created_at)}
+                </span>
+            </div>
+        `;
+
+    }).join("");
+}
+
+
+// ===============================
+// LECTURES
+// ===============================
+
+function updateLecturesList() {
+
+    const container =
+        document.getElementById("lectures-list");
+
+    const lectures = allData.filter(
+        item => item.type === "lecture"
+    );
+
+
+    if (lectures.length === 0) {
+
+        container.innerHTML = `
+            <p class="text-gray-500 text-center py-6">
+                No lectures created yet
+            </p>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML = lectures.map(lecture => {
+
+        const attendanceCount =
+            allData.filter(
+                item =>
+                    item.type === "attendance" &&
+                    item.lecture_id === lecture.lecture_id
+            ).length;
+
+
+        return `
+            <div class="border rounded-lg p-4 mb-3">
+
+                <div class="flex justify-between items-start">
+
+                    <div>
+
+                        <h3 class="font-bold text-lg">
+                            ${lecture.lecture_name}
+                        </h3>
+
+                        <p class="text-sm text-gray-500">
+                            ${lecture.lecture_date}
+                            •
+                            ${lecture.lecture_time}
+                        </p>
+
+                        <p class="text-sm mt-2">
+                            👥 ${attendanceCount} students
+                        </p>
+
+                    </div>
+
+
+                    <div class="flex gap-2">
+
+                        <button
+                            onclick="showQRById('${lecture.lecture_id}')"
+                            class="px-3 py-2 bg-blue-600 text-white rounded-lg">
+                            QR
+                        </button>
+
+                        <button
+                            onclick="confirmDelete('${lecture.__backendId}', 'lecture')"
+                            class="px-3 py-2 bg-red-600 text-white rounded-lg">
+                            Delete
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+}
+
+
+// ===============================
+// DROPDOWNS
+// ===============================
+
+function updateLectureDropdowns() {
+
+    const lectures = allData.filter(
+        item => item.type === "lecture"
+    );
+
+
+    const dropdownIds = [
+        "select-lecture",
+        "filter-lecture",
+        "note-lecture"
+    ];
+
+
+    dropdownIds.forEach(id => {
+
+        const select = document.getElementById(id);
+
+        if (!select) return;
+
+
+        const currentValue = select.value;
+
+
+        if (id === "filter-lecture") {
+
+            select.innerHTML = `
+                <option value="">All Lectures</option>
+                ${lectures.map(lecture => `
+                    <option value="${lecture.lecture_id}">
+                        ${lecture.lecture_name}
+                    </option>
+                `).join("")}
+            `;
+
+        } else {
+
+            select.innerHTML = `
+                <option value="">Select Lecture</option>
+                ${lectures.map(lecture => `
+                    <option value="${lecture.lecture_id}">
+                        ${lecture.lecture_name}
+                    </option>
+                `).join("")}
+            `;
+        }
+
+
+        select.value = currentValue;
+    });
+}
+
+
+// ===============================
+// GENERATE LECTURE
+// ===============================
+
+async function generateLectureQR(event) {
+
+    event.preventDefault();
+
+
+    const lectureName =
+        document.getElementById("lecture-name").value.trim();
+
+    const lectureDate =
+        document.getElementById("lecture-date").value;
+
+    const lectureTime =
+        document.getElementById("lecture-time").value;
+
+
+    if (!lectureName || !lectureDate || !lectureTime) {
+
+        showToast(
+            "Please fill all lecture details",
+            "error"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const result = await apiRequest("/lectures", {
+
+            method: "POST",
+
+            body: JSON.stringify({
+                lecture_name: lectureName,
+                lecture_date: lectureDate,
+                lecture_time: lectureTime
+            })
+
+        });
+
+
+        await loadAllData();
+
+
+        // Find the newly created lecture
+
+        const lectures = allData
+            .filter(item => item.type === "lecture")
+            .filter(item =>
+                item.lecture_name === lectureName &&
+                item.lecture_date === lectureDate &&
+                item.lecture_time === lectureTime
+            )
+            .sort(
+                (a, b) =>
+                    new Date(b.created_at) -
+                    new Date(a.created_at)
+            );
+
+
+        if (lectures.length > 0) {
+
+            const lecture = lectures[0];
+
+            currentLectureId = lecture.lecture_id;
+
+            showQR(
+                lecture.lecture_id,
+                lecture.lecture_name
+            );
+        }
+
+
+        document.getElementById("lecture-form").reset();
+
+        document.getElementById(
+            "lecture-date"
+        ).valueAsDate = new Date();
+
+
+        showToast(
+            "Lecture created successfully!",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            error.message || "Failed to create lecture",
+            "error"
+        );
+    }
+}
+
+
+// ===============================
+// QR CODE
+// ===============================
+
+function showQRById(lectureId) {
+
+    const lecture = allData.find(
+        item =>
+            item.type === "lecture" &&
+            item.lecture_id === lectureId
+    );
+
+
+    if (!lecture) {
+
+        showToast(
+            "Lecture not found",
+            "error"
+        );
+
+        return;
+    }
+
+
+    showQR(
+        lecture.lecture_id,
+        lecture.lecture_name
+    );
+}
+
+
+function showQR(lectureId, lectureName) {
+
+    currentLectureId = lectureId;
+
+    const qrDisplay = document.getElementById("qr-display");
+
+    // Student attendance page
+   const attendanceURL =
+    `http://10.246.247.39:5500/frontend/attendance.html?lecture_id=${encodeURIComponent(lectureId)}`;
+
+    // QR image URL
+    const qrImageURL =
+        `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=${encodeURIComponent(attendanceURL)}`;
+
+    qrDisplay.innerHTML = `
+        <div class="text-center">
+
+            <div class="bg-white p-5 rounded-2xl inline-block mb-5">
+
+                <img
+                    src="${qrImageURL}"
+                    width="300"
+                    height="300"
+                    alt="Attendance QR Code"
+                    style="display:block;"
+                >
+
+            </div>
+
+            <h3 class="font-semibold text-xl text-white mb-1">
+                ${lectureName}
+            </h3>
+
+            <p class="text-sm text-slate-400 mb-2">
+                Scan this QR code to mark attendance
+            </p>
+
+            <p class="text-xs text-slate-500">
+                Students scan this code with their phone
+            </p>
+
+        </div>
+    `;
+}
+
+// ===============================
+// ATTENDANCE
+// ===============================
+
+async function markAttendance(event) {
+
+    event.preventDefault();
+
+
+    const lectureId =
+        document.getElementById("select-lecture").value;
+
+    const studentName =
+        document.getElementById("student-name").value.trim();
+
+    const studentId =
+        document.getElementById("student-id").value.trim();
+
+
+    if (!lectureId || !studentName || !studentId) {
+
+        showToast(
+            "Please fill all attendance details",
+            "error"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await apiRequest("/attendance", {
+
+            method: "POST",
+
+            body: JSON.stringify({
+
+                lecture_id: lectureId,
+
+                student_name: studentName,
+
+                student_id: studentId
+
+            })
+
+        });
+
+
+        await loadAllData();
+
+
+        document
+            .getElementById("attendance-form")
+            .reset();
+
+
+        showToast(
+            "Attendance marked successfully!",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            error.message || "Failed to mark attendance",
+            "error"
+        );
+    }
+}
+
+
+// ===============================
+// ATTENDANCE LIST
+// ===============================
+
+function updateAttendanceList() {
+
+    const container =
+        document.getElementById("attendance-list");
+
+
+    const filter =
+        document.getElementById("filter-lecture")?.value || "";
+
+
+    let attendance = allData.filter(
+        item => item.type === "attendance"
+    );
+
+
+    if (filter) {
+
+        attendance = attendance.filter(
+            item => item.lecture_id === filter
+        );
+    }
+
+
+    if (attendance.length === 0) {
+
+        container.innerHTML = `
+            <p class="text-gray-500 text-center py-6">
+                No attendance records
+            </p>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML = attendance.map(item => {
+
+        const lecture = allData.find(
+            lecture =>
+                lecture.type === "lecture" &&
+                lecture.lecture_id === item.lecture_id
+        );
+
+
+        return `
+            <div class="border rounded-lg p-4 mb-3">
+
+                <div class="flex justify-between">
+
+                    <div>
+
+                        <p class="font-bold">
+                            ${item.student_name}
+                        </p>
+
+                        <p class="text-sm text-gray-500">
+                            ID: ${item.student_id}
+                        </p>
+
+                        <p class="text-sm text-gray-500">
+                            Lecture:
+                            ${lecture
+                                ? lecture.lecture_name
+                                : item.lecture_id}
+                        </p>
+
+                    </div>
+
+                    <span class="text-sm text-gray-400">
+                        ${formatTime(item.check_in_time)}
+                    </span>
+
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+}
+
+
+// ===============================
+// NOTES
+// ===============================
+
+async function saveNote(event) {
+
+    event.preventDefault();
+
+
+    const lectureId =
+        document.getElementById("note-lecture").value || null;
+
+    const title =
+        document.getElementById("note-title").value.trim();
+
+    const content =
+        document.getElementById("note-content").value.trim();
+
+
+    if (!title || !content) {
+
+        showToast(
+            "Please enter note title and content",
+            "error"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await apiRequest("/notes", {
+
+            method: "POST",
+
+            body: JSON.stringify({
+
+                lecture_id: lectureId,
+
+                note_title: title,
+
+                note_content: content
+
+            })
+
+        });
+
+
+        await loadAllData();
+
+
+        document
+            .getElementById("notes-form")
+            .reset();
+
+
+        showToast(
+            "Note saved successfully!",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            error.message || "Failed to save note",
+            "error"
+        );
+    }
+}
+
+
+// ===============================
+// NOTES LIST
+// ===============================
+
+function updateNotesList() {
+
+    const container =
+        document.getElementById("notes-list");
+
+
+    const notes = allData.filter(
+        item => item.type === "note"
+    );
+
+
+    if (notes.length === 0) {
+
+        container.innerHTML = `
+            <p class="text-gray-500 text-center py-6">
+                No notes available
+            </p>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML = notes.map(note => {
+
+        const lecture = allData.find(
+            item =>
+                item.type === "lecture" &&
+                item.lecture_id === note.lecture_id
+        );
+
+
+        return `
+            <div class="border rounded-lg p-4 mb-3">
+
+                <div class="flex justify-between">
+
+                    <div>
+
+                        <h3 class="font-bold">
+                            ${note.note_title}
+                        </h3>
+
+                        <p class="text-sm text-gray-500 mt-1">
+                            ${lecture
+                                ? lecture.lecture_name
+                                : "General Note"}
+                        </p>
+
+                    </div>
+
+                    <button
+                        onclick="confirmDelete('${note.__backendId}', 'note')"
+                        class="px-3 py-2 bg-red-600 text-white rounded-lg">
+                        Delete
+                    </button>
+
+                </div>
+
+                <p class="mt-3 whitespace-pre-wrap">
+                    ${note.note_content}
+                </p>
+
+            </div>
+        `;
+
+    }).join("");
+}
+
+
+// ===============================
+// DELETE
+// ===============================
+
+function confirmDelete(backendId, type) {
+
+    const item = allData.find(
+        data => data.__backendId === String(backendId)
+    );
+
+
+    if (!item) return;
+
+
+    const confirmed = confirm(
+        type === "lecture"
+            ? "Delete this lecture? Its attendance records will also be deleted."
+            : "Delete this note?"
+    );
+
+
+    if (confirmed) {
+
+        executeDelete(item, type);
+    }
+}
+
+
+async function executeDelete(item, type) {
+
+    try {
+
+        if (type === "lecture") {
+
+            await apiRequest(
+                `/lectures/${encodeURIComponent(item.lecture_id)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+
+        } else if (type === "note") {
+
+            await apiRequest(
+                `/notes/${encodeURIComponent(item.id)}`,
+                {
+                    method: "DELETE"
+                }
+            );
+        }
+
+
+        await loadAllData();
+
+
+        showToast(
+            "Deleted successfully!",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            error.message || "Delete failed",
+            "error"
+        );
+    }
+}
+
+
+// ===============================
+// TAB HANDLING
+// ===============================
+
+function switchTab(tab) {
+    currentTab = tab;
+
+    const tabs = [
+        "dashboard",
+        "generate",
+        "attendance",
+        "notes"
+    ];
+
+    tabs.forEach(t => {
+
+        const section = document.getElementById(`section-${t}`);
+        const tabBtn = document.getElementById(`tab-${t}`);
+
+        if (section) {
+            section.classList.toggle("hidden", t !== tab);
+        }
+
+        if (tabBtn) {
+
+            if (t === tab) {
+                tabBtn.classList.add("tab-active");
+                tabBtn.classList.remove("text-slate-400");
+            } else {
+                tabBtn.classList.remove("tab-active");
+                tabBtn.classList.add("text-slate-400");
+            }
+        }
+    });
+}
+
+
+// ===============================
+// TOAST
+// ===============================
+
+function showToast(message, type = "success") {
+
+    const toast =
+        document.getElementById("toast");
+
+    const toastMessage =
+        document.getElementById("toast-message");
+
+    const toastIcon =
+        document.getElementById("toast-icon");
+
+
+    if (!toast) return;
+
+
+    toastMessage.textContent = message;
+
+    toastIcon.textContent =
+        type === "success" ? "✓" : "✕";
+
+
+    toast.classList.remove("hidden");
+
+
+    setTimeout(() => {
+
+        toast.classList.add("hidden");
+
+    }, 3000);
+}
+
+
+// ===============================
+// FORMAT TIME
+// ===============================
+
+function formatTime(dateValue) {
+
+    if (!dateValue) return "";
+
+
+    const date = new Date(dateValue);
+
+
+    if (isNaN(date.getTime())) {
+        return dateValue;
+    }
+
+
+    return date.toLocaleString();
+}
+
+
+// ===============================
+// EVENT LISTENERS
+// ===============================
+
+function setupEventListeners() {
+
+    const lectureForm =
+        document.getElementById("lecture-form");
+
+    if (lectureForm) {
+
+        lectureForm.addEventListener(
+            "submit",
+            generateLectureQR
+        );
+    }
+
+
+    const attendanceForm =
+        document.getElementById("attendance-form");
+
+    if (attendanceForm) {
+
+        attendanceForm.addEventListener(
+            "submit",
+            markAttendance
+        );
+    }
+
+
+    const notesForm =
+        document.getElementById("notes-form");
+
+    if (notesForm) {
+
+        notesForm.addEventListener(
+            "submit",
+            saveNote
+        );
+    }
+
+
+    const filterLecture =
+        document.getElementById("filter-lecture");
+
+    if (filterLecture) {
+
+        filterLecture.addEventListener(
+            "change",
+            updateAttendanceList
+        );
+    }
+}
+
+
+// ===============================
+// INITIALIZE APP
+// ===============================
+
+async function initApp() {
+
+    const lectureDate =
+        document.getElementById("lecture-date");
+
+
+    if (lectureDate) {
+
+        lectureDate.valueAsDate = new Date();
+    }
+
+
+    setupEventListeners();
+
+
+    await loadAllData();
+}
+
+
+// START APP
+
+document.addEventListener(
+    "DOMContentLoaded",
+    initApp
+);
+
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d667426e32d9a87',t:'MTc3MjUxNzk3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
